@@ -2,5 +2,5 @@
   name: lemminx-format
   description: Format xml files with LemMinX
   language: docker_image
-  entry: ghcr.io/lalten/lemminx-pre-commit-hook:latest
+  entry: ghcr.io/lalten/lemminx-pre-commit-hook:main
   types: [xml]
