@@ -1,0 +1,44 @@
+on:
+  push:
+    branches: ['main']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Download the latest release jar of LemMinX and turn it into a native image binary
+      - run: wget https://mirrors.dotsrc.org/eclipse//lemminx/releases/0.27.0/org.eclipse.lemminx-uber.jar
+      - run: >
+          docker run
+          -v"$(pwd):/app"
+          container-registry.oracle.com/graalvm/native-image:21-muslib
+          -jar org.eclipse.lemminx-uber.jar
+          --static --libc=musl
+      - run: file org.eclipse.lemminx-uber
+
+      # Build and push the Dockerfile
+      - uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

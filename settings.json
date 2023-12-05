@@ -1,0 +1,11 @@
+{
+    "format": {
+        "enabled": true,
+        "splitAttributes": false,
+        "joinCDATALines": false,
+        "joinCommentLines": false,
+        "formatComments": true,
+        "joinContentLines": false,
+        "spaceBeforeEmptyCloseTag": true
+    }
+}

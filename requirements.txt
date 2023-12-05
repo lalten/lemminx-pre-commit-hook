@@ -1,0 +1,2 @@
+git+https://github.com/yeger00/pylspclient.git@f47a6d6
+click==8.1.7
