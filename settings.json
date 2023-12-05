@@ -1,11 +1,26 @@
 {
-    "format": {
-        "enabled": true,
-        "splitAttributes": false,
-        "joinCDATALines": false,
-        "joinCommentLines": false,
-        "formatComments": true,
-        "joinContentLines": false,
-        "spaceBeforeEmptyCloseTag": true
+    "settings": {
+        "xml": {
+            "format": {
+                "enabled": true,
+                "formatComments": true,
+                "insertFinalNewline": true,
+                "insertSpaces": true,
+                "joinCDATALines": false,
+                "joinCommentLines": false,
+                "joinContentLines": false,
+                "spaceBeforeEmptyCloseTag": true,
+                "splitAttributes": "preserve",
+                "tabSize": 2,
+                "trimFinalNewlines": true,
+                "trimTrailingWhitespace": true
+            },
+            "useCache": false,
+            "validation": {
+                "noGrammar": "ignore",
+                "enabled": false,
+                "schema": false
+            }
+        }
     }
 }

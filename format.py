@@ -15,10 +15,10 @@ class ReadPipe(threading.Thread):
         self.pipe = pipe
 
     def run(self) -> None:
-        line = self.pipe.readline().decode('utf-8')
+        line = self.pipe.readline().decode("utf-8")
         while line:
             print(line)
-            line = self.pipe.readline().decode('utf-8')
+            line = self.pipe.readline().decode("utf-8")
 
 
 class Registration(object):
@@ -97,20 +97,31 @@ def apply_textedits(text: str, textedits: list[dict[str, typing.Any]]) -> str:
 
 
 @contextlib.contextmanager
-def lsp_client() -> pylspclient.LspClient:
+def lsp_client(initialization_options: dict[str, typing.Any]) -> typing.Iterator[pylspclient.LspClient]:
     proc = make_server()
     try:
         lsp_client = make_lsp_client(proc)
-        root_uri = 'file:///'
-        workspace_folders = [{'name': 'ws', 'uri': root_uri}]
-        lsp_client.initialize(proc.pid, None, root_uri, None, {}, "off", workspace_folders)
+        root_uri = "file:///"
+        lsp_client.initialize(
+            processId=proc.pid,
+            rootPath=None,
+            rootUri=root_uri,
+            initializationOptions=initialization_options,
+            capabilities={},
+            trace="off",
+            workspaceFolders=None,
+        )
         lsp_client.initialized()
         yield lsp_client
     finally:
         proc.kill()
 
 
-def format(client: pylspclient.LspClient, path: pathlib.Path, format_settings: dict[str, typing.Any]) -> bool:
+def format(
+    client: pylspclient.LspClient,
+    path: pathlib.Path,
+    format_settings: dict[str, typing.Any],
+) -> bool:
     uri = f"file://{path}"
     languageId = pylspclient.lsp_structs.LANGUAGE_IDENTIFIER.XML
     version = 1
@@ -123,21 +134,24 @@ def format(client: pylspclient.LspClient, path: pathlib.Path, format_settings: d
     if result:
         text = apply_textedits(text, result)
         path.write_text(text)
-        return True
-    return False
+
+    return bool(result)
 
 
 @click.command()
 @click.option("--settings", type=click.Path(path_type=pathlib.Path, exists=True))
 @click.argument("filenames", nargs=-1, type=click.Path(path_type=pathlib.Path, exists=True))
 def cli(settings: typing.Optional[pathlib.Path], filenames: tuple[pathlib.Path, ...]) -> None:
-    format_settings = {}
-    if settings:
-        format_settings = json.loads(settings.read_text())["format"]
-    with lsp_client() as client:
+    initialization_options = json.loads(settings.read_text()) if settings else {}
+    try:
+        format_options = initialization_options["settings"]["xml"]["format"]
+    except KeyError:
+        format_options = {}
+
+    with lsp_client(initialization_options) as client:
         did_edit = False
         for file in filenames:
-            did_edit |= format(client, file, format_settings)
+            did_edit |= format(client, file, format_options)
     if did_edit:
         raise SystemExit(1)
 

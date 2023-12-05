@@ -7,7 +7,7 @@ wget https://mirrors.dotsrc.org/eclipse//lemminx/releases/0.27.0/org.eclipse.lem
 
 # Turn it into a statically linked native image binary
 docker run \
-    --rm -it \
+    --rm \
     -v"$(pwd):/app" \
     container-registry.oracle.com/graalvm/native-image:21-muslib \
     -jar org.eclipse.lemminx-uber.jar \
