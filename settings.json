@@ -15,7 +15,9 @@
                 "trimFinalNewlines": true,
                 "trimTrailingWhitespace": true
             },
-            "useCache": false,
+            "server": {
+                "workDir": "/tmp"
+            },
             "validation": {
                 "noGrammar": "ignore",
                 "enabled": false,
