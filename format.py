@@ -101,11 +101,10 @@ def lsp_client(initialization_options: dict[str, typing.Any]) -> typing.Iterator
     proc = make_server()
     try:
         lsp_client = make_lsp_client(proc)
-        root_uri = "file:///"
         lsp_client.initialize(
             processId=proc.pid,
             rootPath=None,
-            rootUri=root_uri,
+            rootUri="file:///",
             initializationOptions=initialization_options,
             capabilities={},
             trace="off",
@@ -122,20 +121,25 @@ def format(
     path: pathlib.Path,
     format_settings: dict[str, typing.Any],
 ) -> bool:
-    uri = f"file://{path}"
-    languageId = pylspclient.lsp_structs.LANGUAGE_IDENTIFIER.XML
-    version = 1
+    """Ask lemminx to format a file. Returns True if the file had changes."""
     text = path.read_text()
-    client.didOpen(pylspclient.lsp_structs.TextDocumentItem(uri, languageId, version, text))
+    if not text:
+        # skip empty files
+        return False
 
-    tdi = pylspclient.lsp_structs.TextDocumentIdentifier(uri)
-    result = client.lsp_endpoint.call_method("textDocument/formatting", textDocument=tdi, options=format_settings)
+    td_item = pylspclient.lsp_structs.TextDocumentItem(
+        uri=f"file://{path}", languageId=pylspclient.lsp_structs.LANGUAGE_IDENTIFIER.XML, version=1, text=text
+    )
+    client.didOpen(td_item)
 
-    if result:
-        text = apply_textedits(text, result)
+    td_id = pylspclient.lsp_structs.TextDocumentIdentifier(td_item.uri)
+    textedits = client.lsp_endpoint.call_method("textDocument/formatting", textDocument=td_id, options=format_settings)
+
+    if textedits:
+        text = apply_textedits(text, textedits)
         path.write_text(text)
 
-    return bool(result)
+    return bool(textedits)
 
 
 @click.command()
